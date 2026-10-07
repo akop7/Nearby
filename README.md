@@ -23,34 +23,34 @@ The core of the Nearby physical networking layer is the deterministic GATT trans
 ```mermaid
 flowchart TD
     subgraph Discovery ["1. BLE Peer Discovery"]
-        A[Device A Broadcasts Adv Payload] <--> B[Device B Broadcasts Adv Payload]
-        A -- Scans Peer --> D1[Extract peerNodeId]
-        B -- Scans Peer --> D2[Extract peerNodeId]
+        A["Device A Broadcasts Adv Payload"] <--> B["Device B Broadcasts Adv Payload"]
+        A -- "Scans Peer" --> D1["Extract peerNodeId"]
+        B -- "Scans Peer" --> D2["Extract peerNodeId"]
     end
 
     subgraph Arbitration ["2. Deterministic Role Arbitration"]
-        D1 & D2 --> C{Compare Node IDs\nlocalNodeId.compareTo(peerNodeId)}
-        C -- "Higher ID" --> INIT[Role: GATT Client / Initiator]
-        C -- "Lower ID" --> RESP[Role: GATT Server / Responder]
+        D1 & D2 --> C{"Compare Node IDs<br/>localNodeId.compareTo(peerNodeId)"}
+        C -- "Higher ID" --> INIT["Role: GATT Client / Initiator"]
+        C -- "Lower ID" --> RESP["Role: GATT Server / Responder"]
     end
 
     subgraph Transport ["3. GATT Connection & Setup"]
-        INIT -->|connectGatt| G1[Establish BluetoothGatt Connection]
-        G1 -->|requestMtu 512| G2[Negotiate High MTU: 512 Bytes]
-        G2 -->|Write CCCD Descriptor| G3[Enable Notifications on RX Characteristic]
-        RESP --> S1[Host BluetoothGattServer with Mesh Service UUID]
+        INIT -->|connectGatt| G1["Establish BluetoothGatt Connection"]
+        G1 -->|requestMtu 512| G2["Negotiate High MTU: 512 Bytes"]
+        G2 -->|Write CCCD Descriptor| G3["Enable Notifications on RX Characteristic"]
+        RESP --> S1["Host BluetoothGattServer with Mesh Service UUID"]
     end
 
     subgraph Handshake ["4. Noise_XX Cryptographic Handshake"]
-        G3 -->|Write Msg 1 to TX Char| S2[Server Receives Msg 1]
-        S2 -->|Notify Msg 2 via RX Char| G4[Client Receives Msg 2]
-        G4 -->|Write Msg 3 to TX Char| S3[Server Receives Msg 3]
+        G3 -->|Write Msg 1 to TX Char| S2["Server Receives Msg 1"]
+        S2 -->|Notify Msg 2 via RX Char| G4["Client Receives Msg 2"]
+        G4 -->|Write Msg 3 to TX Char| S3["Server Receives Msg 3"]
     end
 
     subgraph StatePromotion ["5. Session Promotion & Data Transfer"]
-        S3 & G4 --> SEC[Promote State: ENCRYPTED]
-        SEC --> DRAIN[Flush & Consume router.outboundQueue]
-        DRAIN --> MESH[Full Bi-Directional Encrypted Mesh Communication]
+        S3 & G4 --> SEC["Promote State: ENCRYPTED"]
+        SEC --> DRAIN["Flush & Consume router.outboundQueue"]
+        DRAIN --> MESH["Full Bi-Directional Encrypted Mesh Communication"]
     end
 ```
 
